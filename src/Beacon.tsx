@@ -1,45 +1,60 @@
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { BeaconData } from './DataParsing';
 
 interface ModelProps {
-  beaconData: BeaconData;
+  currentBeaconData: BeaconData;
+  nextBeaconData: BeaconData;
 }
 
-export const Model: React.FC<ModelProps> = ({ beaconData }) => {
+export const Model: React.FC<ModelProps> = ({ currentBeaconData, nextBeaconData }) => {
   const gltf = useGLTF('/beacon_model.gltf');
   const groupRef = useRef<THREE.Group>(null!);
 
+  const [rotation, setRotation] = useState({
+    yaw: currentBeaconData.rotation.yaw,
+    pitch: currentBeaconData.rotation.pitch,
+    roll: currentBeaconData.rotation.roll,
+  });
+
   useEffect(() => {
-    if (groupRef.current) {
-      console.log("Group ref is available!");
+    setRotation({
+      yaw: currentBeaconData.rotation.yaw,
+      pitch: currentBeaconData.rotation.pitch,
+      roll: currentBeaconData.rotation.roll,
+    });
+  }, [currentBeaconData]);
 
-      // Set the position using the parsed location
-      const { latitude, longitude, altitude } = beaconData.location;
-      //const position = convertLatLonAltToXYZ(latitude, longitude, altitude);
-      //console.log(position);
-      //groupRef.current.position.set(position.x, position.y, position.z);
-
-      // Set the rotation using the parsed yaw, pitch, roll
-      const { yaw, pitch, roll } = beaconData.rotation;
-      console.log("Rotation:", { yaw, pitch, roll });
-
-      groupRef.current.rotation.set(
-        THREE.MathUtils.degToRad(pitch),
-        THREE.MathUtils.degToRad(yaw),
-        THREE.MathUtils.degToRad(roll)
-      );
-    } else {
-      console.warn("groupRef.current not available yet.");
-    }
-  }, [gltf, beaconData]);
-
-  // Animate the model to move along the x-axis
   useFrame((state, delta) => {
     if (groupRef.current) {
-      groupRef.current.position.x += delta * 0.0; // Adjust the speed as needed
+      // Interpolate between current and next rotation values
+      const newYaw = THREE.MathUtils.lerp(
+        rotation.yaw,
+        nextBeaconData.rotation.yaw,
+        delta * 5 // Adjust the speed of interpolation
+      );
+      const newPitch = THREE.MathUtils.lerp(
+        rotation.pitch,
+        nextBeaconData.rotation.pitch,
+        delta * 5
+      );
+      const newRoll = THREE.MathUtils.lerp(
+        rotation.roll,
+        nextBeaconData.rotation.roll,
+        delta * 5
+      );
+
+      // Update the rotation state
+      setRotation({ yaw: newYaw, pitch: newPitch, roll: newRoll });
+
+      // Apply the interpolated rotation to the model
+      groupRef.current.rotation.set(
+        THREE.MathUtils.degToRad(newPitch),
+        THREE.MathUtils.degToRad(newYaw),
+        THREE.MathUtils.degToRad(newRoll)
+      );
     }
   });
 
@@ -49,16 +64,3 @@ export const Model: React.FC<ModelProps> = ({ beaconData }) => {
     </group>
   );
 };
-
-// Helper function to convert lat/lon/alt to Cartesian coordinates (simplified)
-function convertLatLonAltToXYZ(lat: number, lon: number, alt: number) {
-  const radius = 6371 + alt; // Earth's radius + altitude in kilometers
-  const phi = THREE.MathUtils.degToRad(90 - lat);
-  const theta = THREE.MathUtils.degToRad(lon + 180);
-
-  const x = -(radius * Math.sin(phi) * Math.cos(theta));
-  const y = radius * Math.cos(phi);
-  const z = radius * Math.sin(phi) * Math.sin(theta);
-
-  return { x, y, z };
-}

@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import React, { useEffect, useState } from 'react';
@@ -7,11 +5,11 @@ import { Model } from './Beacon'; // Ensure you have Model in components
 import { BeaconData, parseMessage } from './DataParsing'; // Import your parser
 import { Grids } from './Grid'; // Ensure Grids is also moved to components
 
-const App: React.FC = () => {
+const App = () => {
   const [beaconDataArray, setBeaconDataArray] = useState<BeaconData[]>([]);
-   // Store only the current message
-   const [currentIndex, setCurrentIndex] = useState(0);
-  // Load the file content once
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Fetch and parse the messages from the text file
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -47,15 +45,18 @@ const App: React.FC = () => {
     }
   }, [beaconDataArray]);
 
+  const currentBeaconData = beaconDataArray[currentIndex];
+  const nextBeaconData = beaconDataArray[(currentIndex + 1) % beaconDataArray.length];
+
   return (
     <Canvas>
       <ambientLight intensity={0.5} />
       <directionalLight position={[5, 5, 5]} intensity={1} />
       <pointLight position={[-5, -5, -5]} intensity={0.5} />
 
-      {/* Display the current message data */}
+      {/* Display the current and next message data */}
       {beaconDataArray.length > 0 && (
-        <Model beaconData={beaconDataArray[currentIndex]} />
+        <Model currentBeaconData={currentBeaconData} nextBeaconData={nextBeaconData} />
       )}
 
       <OrbitControls />

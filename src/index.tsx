@@ -1,41 +1,56 @@
-import { Canvas, ThreeElements, useFrame } from '@react-three/fiber'
-import React, { useRef, useState } from 'react'
-import { createRoot } from 'react-dom/client'
-import * as THREE from 'three'
-import './styles.css'
+import { OrbitControls, useBounds, useGLTF } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import React, { useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
+import * as THREE from 'three';
+import './styles.css'; // Ensure you import your CSS
 
-function Box(props: ThreeElements['mesh']) {
-  const meshRef = useRef<THREE.Mesh>(null!)
-  const [hovered, setHover] = useState(false)
-  const [active, setActive] = useState(false)
-  useFrame((state, delta) => (meshRef.current.rotation.x += delta))
-  
+// Component to load and display the GLTF model and fit it to the screen
+const Model = () => {
+  const gltf = useGLTF('/beacon_model.gltf'); // Ensure the path to the model is correct
+
+  // Set the ref type to THREE.Group and initialize with null
+  const groupRef = useRef<THREE.Group>(null!); 
+  const bounds = useBounds();
+
+  // Automatically fit the model into the view when it loads
+  useEffect(() => {
+    if (groupRef.current && bounds) {
+      bounds.refresh(groupRef.current).fit(); // Fit the model into the view
+    }
+  }, [gltf, bounds]);
+
   return (
-    <mesh
-      {...props}
-      ref={meshRef}
-      scale={active ? 1.5 : 1}
-      onClick={(event) => setActive(!active)}
-      onPointerOver={(event) => setHover(true)}
-      onPointerOut={(event) => setHover(false)}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={hovered ? 'hotpink' : '#2f74c0'} />
-    </mesh>
-  )
-}
+    <group ref={groupRef}>
+      {/* Adjust the scale to make the model smaller */}
+      <primitive object={gltf.scene} scale={[0.5, 0.5, 0.5]} />
+    </group>
+  );
+};
 
-const rootElement = document.getElementById('root');
-
-if (rootElement) {
-  createRoot(rootElement).render(
+// Main App Component
+const App = () => {
+  return (
     <Canvas>
-      <ambientLight intensity={Math.PI / 2} />
-      <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} decay={0} intensity={Math.PI} />
-      <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
-      <Box position={[-1.2, 0, 0]} />
-      <Box position={[1.2, 0, 0]} />
+      {/* Basic lights */}
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 5, 5]} intensity={1} />
+      <pointLight position={[-5, -5, -5]} intensity={0.5} />
+
+      {/* Load the GLTF model */}
+      <Model />
+
+      {/* Orbit Controls to navigate the scene */}
+      <OrbitControls />
+
+      {/* UseBounds from @react-three/drei to auto-adjust the view */}
     </Canvas>
   );
-} else {
-  console.error("Root element not found");
-}
+};
+
+// Render the App
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render(<App />);
+
+// If you are using TypeScript, add this for GLTF loader typing
+useGLTF.preload('/beacon_model.gltf');

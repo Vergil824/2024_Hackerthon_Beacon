@@ -1,5 +1,5 @@
 import { OrbitControls, useBounds, useGLTF } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import React, { useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import * as THREE from 'three';
@@ -19,6 +19,13 @@ const Model = () => {
       bounds.refresh(groupRef.current).fit(); // Fit the model into the view
     }
   }, [gltf, bounds]);
+  
+  // Animate the model to move along the x-axis
+  useFrame((state, delta) => {
+    if (groupRef.current) {
+      groupRef.current.position.x += delta * 0.5; // Adjust the speed as needed
+    }
+  });
 
   return (
     <group ref={groupRef}>
@@ -27,6 +34,23 @@ const Model = () => {
     </group>
   );
 };
+
+// Component for drawing grids and axes representing longitude, latitude, and altitude
+const Grids = () => {
+  return (
+    <>
+      {/* Longitude and Latitude Grid (X-Z plane) */}
+      <gridHelper args={[100, 100]} position={[0, 0, 0]} rotation={[0, 0, 0]} />
+
+      {/* Altitude Grid (Y axis lines) */}
+      <gridHelper args={[100, 100]} position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]} />
+
+      {/* Axes Helper for X, Y, Z (longitude, latitude, altitude) */}
+      <axesHelper args={[50]} />
+    </>
+  );
+};
+
 
 // Main App Component
 const App = () => {
@@ -42,6 +66,9 @@ const App = () => {
 
       {/* Orbit Controls to navigate the scene */}
       <OrbitControls />
+
+       {/* Add grids and axes for longitude, latitude, and altitude */}
+       <Grids />
 
       {/* UseBounds from @react-three/drei to auto-adjust the view */}
     </Canvas>

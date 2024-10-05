@@ -18,9 +18,9 @@ export const Model: React.FC<ModelProps> = ({ beaconData }) => {
 
       // Set the position using the parsed location
       const { latitude, longitude, altitude } = beaconData.location;
-      const position = convertLatLonAltToXYZ(latitude, longitude, altitude);
-      console.log(position);
-      groupRef.current.position.set(position.x, position.y, position.z);
+      //const position = convertLatLonAltToXYZ(latitude, longitude, altitude);
+      //console.log(position);
+      //groupRef.current.position.set(position.x, position.y, position.z);
 
       // Set the rotation using the parsed yaw, pitch, roll
       const { yaw, pitch, roll } = beaconData.rotation;
@@ -39,7 +39,7 @@ export const Model: React.FC<ModelProps> = ({ beaconData }) => {
   // Animate the model to move along the x-axis
   useFrame((state, delta) => {
     if (groupRef.current) {
-      groupRef.current.position.x += delta * 2.0; // Adjust the speed as needed
+      groupRef.current.position.x += delta * 0.0; // Adjust the speed as needed
     }
   });
 

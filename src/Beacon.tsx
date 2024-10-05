@@ -1,9 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { OrbitControls, useBounds, useGLTF } from '@react-three/drei';
-import { BeaconData } from './DataParsing';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import './styles.css'; // Ensure you import your CSS
+import { BeaconData } from './DataParsing';
 
 interface ModelProps {
   beaconData: BeaconData;
@@ -12,30 +11,35 @@ interface ModelProps {
 export const Model: React.FC<ModelProps> = ({ beaconData }) => {
   const gltf = useGLTF('/beacon_model.gltf');
   const groupRef = useRef<THREE.Group>(null!);
-  const bounds = useBounds();
 
   useEffect(() => {
-    if (groupRef.current && bounds) {
+    if (groupRef.current) {
+      console.log("Group ref is available!");
+
       // Set the position using the parsed location
       const { latitude, longitude, altitude } = beaconData.location;
       const position = convertLatLonAltToXYZ(latitude, longitude, altitude);
+      console.log(position);
       groupRef.current.position.set(position.x, position.y, position.z);
 
       // Set the rotation using the parsed yaw, pitch, roll
       const { yaw, pitch, roll } = beaconData.rotation;
+      console.log("Rotation:", { yaw, pitch, roll });
+
       groupRef.current.rotation.set(
         THREE.MathUtils.degToRad(pitch),
         THREE.MathUtils.degToRad(yaw),
         THREE.MathUtils.degToRad(roll)
       );
-      bounds.refresh(groupRef.current).fit();
+    } else {
+      console.warn("groupRef.current not available yet.");
     }
-  }, [gltf, bounds, beaconData]);
+  }, [gltf, beaconData]);
 
   // Animate the model to move along the x-axis
   useFrame((state, delta) => {
     if (groupRef.current) {
-      groupRef.current.position.x += delta * 0.5; // Adjust the speed as needed
+      groupRef.current.position.x += delta * 2.0; // Adjust the speed as needed
     }
   });
 

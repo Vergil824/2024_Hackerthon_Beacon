@@ -15,7 +15,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await fetch('/Messages.txt'); // Ensure the file is in the public directory
+        const response = await fetch('/updated_beacon_output.txt'); // Ensure the file is in the public directory
         const text = await response.text();
         
         // Split the content into individual messages using "Message " as the delimiter
@@ -63,6 +63,5 @@ const App: React.FC = () => {
     </Canvas>
   );
 };
-
 
 export default App;
